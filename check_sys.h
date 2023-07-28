@@ -1,61 +1,145 @@
 #include <avr/eeprom.h>
 #include <avr/wdt.h>
 
-#define COUNTBLOK 11        //количество блоков в программе
-
 
 class WhatchDog
 {
-    int countBlock;
+  int countBlock;
 	int nowBlock=0;
-	
+	void zero_all_blocks();
+  void check_start();
 	public:
-		WhatchDog(char*);
+   void whatch_eeprom();
+    void start_setup();
+		WhatchDog(int,int);
+    bool check_block();
+    void start_loop();
+    void zero_all_eeprom();
+    void prt_countBlock();
 		~WhatchDog();
 };
 
-WhatchDog::WhatchDog(int time=8, int countBlock=30)
+
+void WhatchDog::prt_countBlock()
 {
-	wdt_disable();
-	switch (time)
-	{
-	case 15:
-		wdt_enable (WDTO_15MS);
-		break;
-	case 30:
-		wdt_enable (WDTO_30MS);
-		break;
-	case 60:
-		wdt_enable (WDTO_60MS);
-		break;
-	case 120:
-		wdt_enable (WDTO_120MS);
-		break;
-	case 250:
-		wdt_enable (WDTO_250MS);
-		break;
-	case 500:
-		wdt_enable (WDTO_500MS);
-		break;
-	case 1:
-		wdt_enable (WDTO_1S);
-		break;
-	case 2:
-		wdt_enable (WDTO_2S);
-		break;
-	case 4:
-		wdt_enable (WDTO_4S);
-		break;
-	default:
-		wdt_enable (WDTO_8S);
-		break;
-	}
-	end_block(0);
+  Serial.println(this->countBlock);
+}
+
+
+void WhatchDog::start_loop()
+{
+  zero_all_blocks();
+  if(this->nowBlock==0)
+    return;
+  this->countBlock=this->nowBlock;
+  this->nowBlock=0;
+}
+
+
+void WhatchDog::zero_all_blocks()
+{
+  for(int i=1; i<this->countBlock; i++)
+    if(eeprom_read_byte(i) == 1)
+      eeprom_update_byte(i, 0);
+}
+
+void WhatchDog::start_setup()
+{
+  check_start();
+  this->nowBlock=0;
+}
+
+
+WhatchDog::WhatchDog(int tim=8, int cB=50)
+{
+  nowBlock=0;
+  countBlock=cB;
+  wdt_disable();
+  switch (tim)
+  {
+  case 15:
+    wdt_enable (WDTO_15MS);
+    break;
+  case 30:
+    wdt_enable (WDTO_30MS);
+    break;
+  case 60:
+    wdt_enable (WDTO_60MS);
+    break;
+  case 120:
+    wdt_enable (WDTO_120MS);
+    break;
+  case 250:
+    wdt_enable (WDTO_250MS);
+    break;
+  case 500:
+    wdt_enable (WDTO_500MS);
+    break;
+  case 1:
+    wdt_enable (WDTO_1S);
+    break;
+  case 2:
+    wdt_enable (WDTO_2S);
+    break;
+  case 4:
+    wdt_enable (WDTO_4S);
+    break;
+  default:
+    wdt_enable (WDTO_8S);
+    break;
+  }
 }
 
 WhatchDog::~WhatchDog()
 {
 ;
+}
+
+void WhatchDog::check_start()
+{
+  int i=0;
+  int a=0;
+  int k;
+  Serial.print("Количество блоков:");
+  Serial.println(this->countBlock);
+  for(;(i<this->countBlock) && (a==0); i++)  //ищем ненулевые блоки(если хотя бы один равен единице, то программа работала и произошла аппаратная перезагрузка)
+    if ( eeprom_read_byte(i)!=0)
+    {
+        a=1;
+        break;
+    }
+  if(a==1)
+    Serial.println("Найден блок");
+  else
+    Serial.println("Блок не найден");
+
+  if(a!=0)
+  {
+      for(i=0;(i<this->countBlock); i++) //ищем блок, на котором все остановилось, это будет первый нулевой блок
+          if(eeprom_read_byte(i) == 0)
+          {
+            a=i;
+            break;
+          }
+      eeprom_update_byte(a, 2);
+      Serial.print("System ");
+      Serial.print(a);
+      Serial.println(" is off");
+  }
+}
+
+
+
+bool WhatchDog::check_block()
+{
+  if ( !eeprom_read_byte(this->nowBlock) )
+         eeprom_update_byte(this->nowBlock, 1);
+  wdt_reset();
+  this->nowBlock++;
+  if ( eeprom_read_byte(this->nowBlock))
+     return false;
+  else
+     return true; 
 }
 
 
@@ -81,69 +165,11 @@ WhatchDog::~WhatchDog()
   WDTO_4S
   WDTO_8S
 */
-void start_whatchdog()    //инициализация сторожевого таймера
-{                         //требуется ставить эту функцию самой первой в setup
-  wdt_disable();
-  wdt_enable (WDTO_8S);  
-}
 
 
-void check_start()
+void WhatchDog::whatch_eeprom()
 {
-  int i=0;
-  int a=0;
-  int k;
-  for(;(i<COUNTBLOK) && (a==0); i++)  //ищем ненулевые блоки(если хотя бы один равен единице, то программа работала и произошла аппаратная перезагрузка)
-    if ( eeprom_read_byte(i)!=0)
-    {
-        a=1;
-        break;
-    }
-  if(a!=0)
-  {
-      for(i=0;(i<COUNTBLOK); i++) //ищем блок, на котором все остановилось, это будет первый нулевой блок
-          if(eeprom_read_byte(i) == 0)
-          {
-            a=i;
-            break;
-          }
-      eeprom_update_byte(a, 2);
-      Serial.print("System ");
-      Serial.print(a);
-      Serial.println(" is off");
-  }
-}
-
-
-
-void start_loop()   
-{
-  for(int i=0; i<COUNTBLOK; i++)
-    if(eeprom_read_byte(i) == 1)
-      eeprom_update_byte(i, 0);
-}
-
-
-void end_block(int i)   //Ставится !!!ВНУТРИ!!! выполняемого
-{                       //блока в самом конце его выполнения
-     eeprom_update_byte(i, 1);
-     wdt_reset();
-}
-
-
-
-bool check_block(int i)
-{
-  if ( eeprom_read_byte(i))
-     return false;
-  else
-     return true; 
-}
-
-
-void whatch_eeprom()
-{
-  for(int i=0; i<COUNTBLOK; i++)
+  for(int i=0; i<countBlock; i++)
   {
     Serial.print(i);
     Serial.print("=");
@@ -151,12 +177,14 @@ void whatch_eeprom()
   }
 }
 
-void zero_all_eeprom()
-{
 
-  for(int i=0; i<COUNTBLOK; i++)
+void WhatchDog::zero_all_eeprom()
+{
+  wdt_disable();
+  for(int i=0; i< this->countBlock; i++)
   {
     eeprom_update_byte(i, 0);
-  }  
-  
+  }
+  Serial.println("Энергонезависимые переменные обнулены");
+  while(1);
 }
