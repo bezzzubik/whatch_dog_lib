@@ -4,8 +4,7 @@ WhatchDog wd;
 
 void setup() {
   Serial.begin(9600);
-  wd.start_setup();
-//  wd.zero_all_eeprom();    //обнуление всех нужных энергонезависимых переменных
+  //wd.zero_all_eeprom();    //обнуление всех нужных энергонезависимых переменных
 
   wd.whatch_eeprom();    //выводим энергонезависимые переменные
 

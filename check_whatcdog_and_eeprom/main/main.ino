@@ -1,7 +1,7 @@
 #include "avr/eeprom.h"
 #include "avr/wdt.h"
 
-#define REP 1
+#define REP 0
 
 void setup() 
 {

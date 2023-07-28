@@ -9,8 +9,7 @@ class WhatchDog
 	void zero_all_blocks();
   void check_start();
 	public:
-   void whatch_eeprom();
-    void start_setup();
+    void whatch_eeprom();
 		WhatchDog(int,int);
     bool check_block();
     void start_loop();
@@ -43,18 +42,13 @@ void WhatchDog::zero_all_blocks()
       eeprom_update_byte(i, 0);
 }
 
-void WhatchDog::start_setup()
-{
-  check_start();
-  this->nowBlock=0;
-}
 
-
-WhatchDog::WhatchDog(int tim=8, int cB=50)
+WhatchDog::WhatchDog(int cB=50, int tim=8)
 {
   nowBlock=0;
   countBlock=cB;
   wdt_disable();
+  check_start();
   switch (tim)
   {
   case 15:
