@@ -69,11 +69,11 @@ ___
 ```C++
 class WhatchDog
 {
-        int countBlock;
-	int nowBlock=0;
-	void zero_all_blocks();
+    int countBlock;
+    int nowBlock=0;
+    void zero_all_blocks();
     void check_start();
-	public:
+    public:
         void whatch_eeprom();
         WhatchDog(int,int);
         bool check_block();
