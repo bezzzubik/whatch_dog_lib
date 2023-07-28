@@ -69,18 +69,18 @@ ___
 ```C++
 class WhatchDog
 {
-    int countBlock;
+        int countBlock;
 	int nowBlock=0;
 	void zero_all_blocks();
     void check_start();
 	public:
         void whatch_eeprom();
-		WhatchDog(int,int);
+        WhatchDog(int,int);
         bool check_block();
         void start_loop();
         void zero_all_eeprom();
         void prt_countBlock();
-		~WhatchDog();
+	~WhatchDog();
 };
 ```
 Разбор методов и переменных класса:
