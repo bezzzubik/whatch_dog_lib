@@ -1,6 +1,8 @@
 #include <avr/eeprom.h>
 #include <avr/wdt.h>
 
+#define MAX 50
+
 
 class WhatchDog
 {
@@ -9,13 +11,19 @@ class WhatchDog
 	void zero_all_blocks();
   void check_start();
 	public:
-    void whatch_eeprom();
+    void prt_eeprom();
+    void prt_eeprom(int);
 		WhatchDog(int,int);
     bool check_block();
     void start_loop();
     void zero_all_eeprom();
     void prt_countBlock();
-		~WhatchDog();
+    void change_eeprom(int, int);
+    void change_eeprom(int, int, int);
+    bool block_status(int);
+    void off_block(int);
+    void on_block(int);
+    ~WhatchDog();
 };
 
 
@@ -43,7 +51,7 @@ void WhatchDog::zero_all_blocks()
 }
 
 
-WhatchDog::WhatchDog(int cB=50, int tim=8)
+WhatchDog::WhatchDog(int cB=MAX, int tim=8)
 {
   nowBlock=0;
   countBlock=cB;
@@ -161,7 +169,7 @@ bool WhatchDog::check_block()
 */
 
 
-void WhatchDog::whatch_eeprom()
+void WhatchDog::prt_eeprom()
 {
   for(int i=0; i<countBlock; i++)
   {
@@ -169,6 +177,14 @@ void WhatchDog::whatch_eeprom()
     Serial.print("=");
     Serial.println(eeprom_read_byte(i));
   }
+}
+
+
+void WhatchDog::prt_eeprom(int i)
+{
+  Serial.print(i);
+  Serial.print("=");
+  Serial.println(eeprom_read_byte(i));
 }
 
 
@@ -181,4 +197,45 @@ void WhatchDog::zero_all_eeprom()
   }
   Serial.println("Энергонезависимые переменные обнулены");
   while(1);
+}
+
+
+void zero_all_eeprom(int count=MAX)
+{
+  wdt_disable();
+  for(int i=0; i < count; i++)
+  {
+    eeprom_update_byte(i, 0);
+  }
+  Serial.println("Энергонезависимые переменные обнулены");
+  while(1);
+}
+
+
+void WhatchDog::change_eeprom(int numVar, int var)
+{
+  eeprom_update_byte(numVar, var);
+}
+
+void WhatchDog::change_eeprom(int start, int end, int var)
+{
+  for(int i=start; i<end; i++)
+    eeprom_update_byte(i, var);
+}
+
+bool WhatchDog::block_status(int i)
+{
+  if (eeprom_read_byte(i) == 2)
+    return False;
+  return True;
+}
+
+void WhatchDog::off_block(int i)
+{
+    eeprom_update_byte(i, 2);
+}
+
+void WhatchDog::on_block(int i)
+{
+    eeprom_update_byte(i, 0);
 }
