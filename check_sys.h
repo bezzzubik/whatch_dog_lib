@@ -8,6 +8,8 @@ class WhatchDog
 {
   int countBlock;
 	int nowBlock=0;
+  int off;
+
 	void zero_all_blocks();
   void check_start();
 	public:
@@ -23,6 +25,7 @@ class WhatchDog
     bool block_status(int);
     void off_block(int);
     void on_block(int);
+    void off_wd();
     ~WhatchDog();
 };
 
@@ -53,8 +56,9 @@ void WhatchDog::zero_all_blocks()
 
 WhatchDog::WhatchDog(int cB=MAX, int tim=8)
 {
-  nowBlock=0;
-  countBlock=cB;
+  nowBlock = 0;
+  countBlock = cB;
+  off = 0;
   wdt_disable();
   check_start();
   switch (tim)
@@ -99,6 +103,8 @@ WhatchDog::~WhatchDog()
 
 void WhatchDog::check_start()
 {
+  if (this->off)
+    return;
   int i=0;
   int a=0;
   int k;
@@ -134,6 +140,8 @@ void WhatchDog::check_start()
 
 bool WhatchDog::check_block()
 {
+  if (this->off)
+    return true;
   if ( !eeprom_read_byte(this->nowBlock) )
          eeprom_update_byte(this->nowBlock, 1);
   wdt_reset();
@@ -217,11 +225,13 @@ void WhatchDog::change_eeprom(int numVar, int var)
   eeprom_update_byte(numVar, var);
 }
 
+
 void WhatchDog::change_eeprom(int start, int end, int var)
 {
   for(int i=start; i<end; i++)
     eeprom_update_byte(i, var);
 }
+
 
 bool WhatchDog::block_status(int i)
 {
@@ -230,12 +240,21 @@ bool WhatchDog::block_status(int i)
   return True;
 }
 
+
 void WhatchDog::off_block(int i)
 {
     eeprom_update_byte(i, 2);
 }
 
+
 void WhatchDog::on_block(int i)
 {
     eeprom_update_byte(i, 0);
+}
+
+
+void WhatchDog::off_wd()
+{
+  wdt_disable();
+  this->off=1;
 }
